@@ -22,18 +22,29 @@
 
 volatile char receivedData;       // Global variable to store received data
 volatile uint8_t newDataFlag = 0; // Global flag to indicate new data reception
-
 // Function Prototypes
 void SystemClock_Config(void);
 void USART_TransmitChar(char c);
 void USART_TransmitString(const char *str);
 char USART_ReceiveChar(void);
 void ProcessCommand(char color, char action);
+//void USART3_4_IRQHandler(void);
+
+
+// USART3 Interrupt Handler
+void USART3_4_IRQHandler(void)
+{
+    if (USART3->ISR & USART_ISR_RXNE)
+    {                               // Check if RXNE flag is set
+        receivedData = USART3->RDR; // Read data, RXNE flag is cleared automatically
+        newDataFlag = 1;            // Set new data flag
+    }
+}
 
 int main(void)
 {
     HAL_Init();
-
+	
     // Enable peripheral clock to Port B
     RCC->AHBENR |= RCC_AHBENR_GPIOBEN;
 
@@ -113,7 +124,7 @@ int main(void)
     USART3->BRR = HAL_RCC_GetHCLKFreq() / 115200; // Set baud rate
 
     // NVIC configuration for USART3 interrupt
-    NVIC_SetPriority(USART3_4_IRQn, 5); // Set priority level, adjust IRQn as per your MCU
+    NVIC_SetPriority(USART3_4_IRQn, 3); // Set priority level, adjust IRQn as per your MCU
     NVIC_EnableIRQ(USART3_4_IRQn);      // Enable USART3 interrupt in NVIC
 
     // GPIO and USART initialization code here (not shown for brevity)
@@ -144,16 +155,6 @@ int main(void)
             USART_TransmitString("Error: Unrecognized command\r\nCMD?\r\n"); // Error message for invalid character
             commandIndex = 0;                                                // Reset command index
         }
-    }
-}
-
-// USART3 Interrupt Handler
-void USART3_4_IRQHandler(void)
-{
-    if (USART3->ISR & USART_ISR_RXNE)
-    {                               // Check if RXNE flag is set
-        receivedData = USART3->RDR; // Read data, RXNE flag is cleared automatically
-        newDataFlag = 1;            // Set new data flag
     }
 }
 
@@ -297,3 +298,4 @@ void assert_failed(uint8_t *file, uint32_t line)
     /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
+
