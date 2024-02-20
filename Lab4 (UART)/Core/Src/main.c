@@ -74,10 +74,39 @@ int main(void)
 	
   SystemClock_Config();
 	
-	GPIOC -> MODER |= 0x55;
-	GPIOC -> OTYPER |= 0x0000;
-	GPIOC -> PUPDR |= 0x00000000;
-	GPIOC -> OSPEEDR |= 0x00000000;
+GPIOC->MODER &=~(1<<19); 
+GPIOC->MODER |=(1<<18);
+GPIOC->MODER &=~(1<<17); 
+GPIOC->MODER |=(1<<16);
+GPIOC->MODER &=~(1<<15); 
+GPIOC->MODER |=(1<<14); 
+GPIOC->MODER &=~(1<<13); 
+GPIOC->MODER |=(1<<12); 
+	
+GPIOC->OTYPER &=~(1<<6);
+GPIOC->OTYPER &=~(1<<7);
+GPIOC->OTYPER &=~(1<<8);
+GPIOC->OTYPER &=~(1<<9);
+	
+GPIOC->OSPEEDR &=~(1<<18); 
+GPIOC->OSPEEDR &=~(1<<16);
+GPIOC->OSPEEDR &=~(1<<14);
+GPIOC->OSPEEDR &=~(1<<12); 
+ 
+	
+GPIOC->PUPDR &=~(1<<19); 
+GPIOC->PUPDR &=~(1<<18);
+GPIOC->PUPDR &=~(1<<17); 
+GPIOC->PUPDR &=~(1<<16);
+GPIOC->PUPDR &=~(1<<15); 
+GPIOC->PUPDR &=~(1<<14);
+GPIOC->PUPDR &=~(1<<13); 
+GPIOC->PUPDR &=~(1<<12); 
+
+GPIOC->ODR |=(1<<9);
+GPIOC->ODR |=(1<<8);
+GPIOC->ODR |=(1<<7);
+GPIOC->ODR |=(1<<6);
 	
 	// Set pins 11 & 10 to alternate function mode
 	GPIOB -> MODER &= ~(1<<20);
@@ -94,17 +123,17 @@ int main(void)
 
 	// Enable the Transmitter and Receiver
   //USART3->CR1 |= (USART_CR1_TE | USART_CR1_RE);  // Enable transmitter and receiver
-	
-	//USART3->CR1 |= (1<<5);
 
 	USART3->CR1 |= (1<<2);
 	USART3->CR1 |= (1<<3);
+	
+	//USART3->CR1 |= (1<<5);
 	
 	// Enable the USART Peripheral
   //USART3->CR1 |= USART_CR1_UE;  // Enable USART
 	USART3->CR1 |= (1<<0);
 	
-	char received;
+	//char received;
   while (1)
   {
 		HAL_Delay(1500);
