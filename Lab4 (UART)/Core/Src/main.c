@@ -19,25 +19,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-void configureUSART(void) {
-    // 1. Enable the system clock to the USART peripheral
-    RCC->APB1ENR |= RCC_APB1ENR_USART3EN;  
-
-    // 2. Set the Baud Rate
-    USART3->BRR = HAL_RCC_GetHCLKFreq()/9600; // This gets the 115200 baud rate
-
-    // 3. Enable the Transmitter and Receiver
-    //USART3->CR1 |= (USART_CR1_TE | USART_CR1_RE);  // Enable transmitter and receiver
-		USART3->CR1 |= (1<<2);
-		USART3->CR1 |= (1<<3);
-	// 4. Enable the USART Peripheral
-    //USART3->CR1 |= USART_CR1_UE;  // Enable USART
-		USART1->CR1 |= (1<<0);
-
-    // Note: Other configurations like word length, stop bits, parity, etc., should also be configured here as needed.
-}
-
-
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -54,47 +35,105 @@ void SystemClock_Config(void);
   * @brief  The application entry point.
   * @retval int
   */
-	
-	
+
+// Assume USART_TransmitChar is a function you've previously defined to transmit a single character
+void USART_TransmitChar(char c) {
+    // Wait for the transmit data register to be empty
+    while (!(USART3->ISR &  USART_ISR_TXE));  
+    USART3->TDR = c;  // Send the character
+}
+
+// Function to transmit a string over USART
+void USART_TransmitString(const char* str) {
+    while (*str != '\0') {  // Loop until the null character is encountered
+        USART_TransmitChar(*str);  // Transmit the current character
+        str++;  // Move to the next character in the string
+    }
+}
+
+// Assume USART_TransmitChar is a function you've previously defined to transmit a single character
+char USART_ReceiveChar(void) {
+    // Wait for the transmit data register to be empty
+    while (!(USART3->ISR & USART_ISR_RXNE));  // Replace 'USARTx' with your USART instance
+    return (char)(USART3 -> RDR & 0xFF);
+}
+
+
 int main(void)
 {
-
   HAL_Init();
-
-  configureUSART();  // Configure USART with the desired settings
 
 	// Enable peripheral clock to Port B
 	RCC->AHBENR |= RCC_AHBENR_GPIOBEN;
 	
+	// Enable peripheral clock to Port C
+	RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
+
 	 // Enable the system clock to the USART peripheral
 	RCC->APB1ENR |= RCC_APB1ENR_USART3EN;  
+	
   SystemClock_Config();
 	
-	// Set pins 11 & 10 to alternate function mode
-	GPIOB -> MODER |= (1<<11);
-	GPIOB -> MODER &= ~(1<<10);
+	GPIOC -> MODER |= 0x55;
+	GPIOC -> OTYPER |= 0x0000;
+	GPIOC -> PUPDR |= 0x00000000;
+	GPIOC -> OSPEEDR |= 0x00000000;
 	
+	// Set pins 11 & 10 to alternate function mode
+	GPIOB -> MODER &= ~(1<<20);
+	GPIOB -> MODER |= (1<<21);
+	GPIOB -> MODER &= ~(1<<22);
+	GPIOB -> MODER |= (1<<23);
+	GPIOB -> MODER &= ~(1<<22);	
 	GPIOB ->AFR[1] |= (1<<10);
 	GPIOB ->AFR[1] |= (1<<14);
 	
 	// Set the Baud Rate
-  USART3->BRR = HAL_RCC_GetHCLKFreq()/9600; // This gets the 115200 baud rate
-		
+  //USART3->BRR = HAL_RCC_GetHCLKFreq() / 9600; // This gets the 115200 baud rate
+	USART3->BRR = HAL_RCC_GetHCLKFreq() / 115200; // This gets the 115200 baud rate
+
 	// Enable the Transmitter and Receiver
   //USART3->CR1 |= (USART_CR1_TE | USART_CR1_RE);  // Enable transmitter and receiver
+	
+	//USART3->CR1 |= (1<<5);
+
 	USART3->CR1 |= (1<<2);
 	USART3->CR1 |= (1<<3);
 	
 	// Enable the USART Peripheral
   //USART3->CR1 |= USART_CR1_UE;  // Enable USART
-	USART1->CR1 |= (1<<0);
+	USART3->CR1 |= (1<<0);
 	
-
+	char received;
   while (1)
   {
-	
-  }
-}
+		HAL_Delay(1500);
+		USART_TransmitChar('a');
+		/*received = USART_ReceiveChar();
+		
+ // Ensure that USART3->RDR contains new data by checking USART3's status register (e.g., SR, ISR, or similar, depending on the MCU)
+    //if (USART3->ISR & USART_ISR_RXNE) {  // This line might need to be adjusted based on your specific MCU
+        switch (received) {
+            case 'g': // Green LED
+                GPIOC->ODR ^= (1 << 9);
+                break; // Added break statement
+            case 'o': // Orange LED
+                GPIOC->ODR ^= (1 << 8);
+                break; // Added break statement
+            case 'b': // Blue LED
+                GPIOC->ODR ^= (1 << 7);
+                break; // Added break statement
+            case 'r': // Red LED
+                GPIOC->ODR ^= (1 << 6);
+                break; // Added break statement
+            default:
+                USART_TransmitString("Error: Unrecognized command\r\n");  // Print error message
+                // Ensure that printf is correctly setup for your environment
+		*/
+      //}
+    }  
+	}
+
 
 /**
   * @brief System Clock Configuration
@@ -149,6 +188,7 @@ void Error_Handler(void)
   }
   /* USER CODE END Error_Handler_Debug */
 }
+
 
 #ifdef  USE_FULL_ASSERT
 /**
