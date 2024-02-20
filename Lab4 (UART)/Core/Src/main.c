@@ -133,12 +133,11 @@ GPIOC->ODR |=(1<<6);
   //USART3->CR1 |= USART_CR1_UE;  // Enable USART
 	USART3->CR1 |= (1<<0);
 	
-	//char received;
+	char received;
   while (1)
   {
 		HAL_Delay(1500);
-		USART_TransmitChar('a');
-		/*received = USART_ReceiveChar();
+		received = USART_ReceiveChar();
 		
  // Ensure that USART3->RDR contains new data by checking USART3's status register (e.g., SR, ISR, or similar, depending on the MCU)
     //if (USART3->ISR & USART_ISR_RXNE) {  // This line might need to be adjusted based on your specific MCU
@@ -158,8 +157,8 @@ GPIOC->ODR |=(1<<6);
             default:
                 USART_TransmitString("Error: Unrecognized command\r\n");  // Print error message
                 // Ensure that printf is correctly setup for your environment
-		*/
-      //}
+		
+      }
     }  
 	}
 
