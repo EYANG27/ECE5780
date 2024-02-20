@@ -19,31 +19,25 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
+void configureUSART(void) {
+    // 1. Enable the system clock to the USART peripheral
+    RCC->APB1ENR |= RCC_APB1ENR_USART3EN;  
 
-/* USER CODE END Includes */
+    // 2. Set the Baud Rate
+    USART3->BRR = HAL_RCC_GetHCLKFreq()/9600; // This gets the 115200 baud rate
 
-/* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN PTD */
+    // 3. Enable the Transmitter and Receiver
+    //USART3->CR1 |= (USART_CR1_TE | USART_CR1_RE);  // Enable transmitter and receiver
+		USART3->CR1 |= (1<<2);
+		USART3->CR1 |= (1<<3);
+	// 4. Enable the USART Peripheral
+    //USART3->CR1 |= USART_CR1_UE;  // Enable USART
+		USART1->CR1 |= (1<<0);
 
-/* USER CODE END PTD */
+    // Note: Other configurations like word length, stop bits, parity, etc., should also be configured here as needed.
+}
 
-/* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
 
-/* USER CODE END PD */
-
-/* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
-
-/* USER CODE END PM */
-
-/* Private variables ---------------------------------------------------------*/
-
-/* USER CODE BEGIN PV */
-
-/* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -60,42 +54,46 @@ void SystemClock_Config(void);
   * @brief  The application entry point.
   * @retval int
   */
+	
+	
 int main(void)
 {
-  /* USER CODE BEGIN 1 */
 
-  /* USER CODE END 1 */
-
-  /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
-  /* USER CODE BEGIN Init */
+  configureUSART();  // Configure USART with the desired settings
 
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
+	// Enable peripheral clock to Port B
+	RCC->AHBENR |= RCC_AHBENR_GPIOBEN;
+	
+	 // Enable the system clock to the USART peripheral
+	RCC->APB1ENR |= RCC_APB1ENR_USART3EN;  
   SystemClock_Config();
+	
+	// Set pins 11 & 10 to alternate function mode
+	GPIOB -> MODER |= (1<<11);
+	GPIOB -> MODER &= ~(1<<10);
+	
+	GPIOB ->AFR[1] |= (1<<10);
+	GPIOB ->AFR[1] |= (1<<14);
+	
+	// Set the Baud Rate
+  USART3->BRR = HAL_RCC_GetHCLKFreq()/9600; // This gets the 115200 baud rate
+		
+	// Enable the Transmitter and Receiver
+  //USART3->CR1 |= (USART_CR1_TE | USART_CR1_RE);  // Enable transmitter and receiver
+	USART3->CR1 |= (1<<2);
+	USART3->CR1 |= (1<<3);
+	
+	// Enable the USART Peripheral
+  //USART3->CR1 |= USART_CR1_UE;  // Enable USART
+	USART1->CR1 |= (1<<0);
+	
 
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
-
-  /* Initialize all configured peripherals */
-  /* USER CODE BEGIN 2 */
-
-  /* USER CODE END 2 */
-
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
+	
   }
-  /* USER CODE END 3 */
 }
 
 /**
