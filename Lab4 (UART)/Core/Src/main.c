@@ -28,7 +28,7 @@ void USART_TransmitChar(char c);
 void USART_TransmitString(const char *str);
 char USART_ReceiveChar(void);
 void ProcessCommand(char color, char action);
-//void USART3_4_IRQHandler(void);
+void USART3_4_IRQHandler(void);
 
 
 // USART3 Interrupt Handler
