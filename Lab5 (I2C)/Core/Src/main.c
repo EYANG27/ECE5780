@@ -62,80 +62,114 @@ void SystemClock_Config(void);
   */
 int main(void)
 {
-  /* USER CODE BEGIN 1 */
+SystemClock_Config();
 
-  /* USER CODE END 1 */
+RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
+  RCC->AHBENR |= RCC_AHBENR_GPIOBEN;
+  RCC->APB1ENR |= RCC_APB1ENR_I2C2EN;
 
-  /* MCU Configuration--------------------------------------------------------*/
+  GPIOB -> MODER |= (1 << 23); // PB11 Alternate function
+  GPIOB -> MODER &= ~(1 << 22); // PB11 Alternate function
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+  GPIOB -> OTYPER |= (1 << 11); // PB11 Output open-drain
 
-  /* USER CODE BEGIN Init */
+  GPIOB -> AFR[1] |= (1<<12); // Set alternate function mode
+	GPIOB -> AFR[1] &= ~(1<<13);
+	GPIOB -> AFR[1] &= ~(1<<14);
+	GPIOB -> AFR[1] &= ~(1<<15);
 
-  /* USER CODE END Init */
+  GPIOB -> MODER |= (1 << 27); // PB13 Alternate function
+  GPIOB -> MODER &= ~(1 << 26); // PB13 Alternate function
 
-  /* Configure the system clock */
-  SystemClock_Config();
-	
-	 // Enable peripheral clock to Port B
-    RCC->AHBENR |= RCC_AHBENR_GPIOBEN;
+  GPIOB -> OTYPER |= (1 << 13); // PB13 Output open-drain
 
-    // Enable peripheral clock to Port C
-    RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
+  GPIOB -> AFR[1] |= (1<<20); // Set alternate function mode
+	GPIOB -> AFR[1] &= ~(1<<21);
+	GPIOB -> AFR[1] |= (1<<22);
+	GPIOB -> AFR[1] &= ~(1<<23);
 
-		//Set PB11 to Alternate Function Mode
-		GPIOB->MODER |= (1 << 23);
-		GPIOB->MODER &= ~(1 << 22);
-		
-		GPIOB->OTYPER |= (1 << 11);
+  GPIOB -> MODER |= (1 << 28); // PB14 output mode
+  GPIOB -> MODER &= ~(1 << 29); // PB14 ouput mode
 
-		GPIOB->AFR[1] |= (1 << 12); // Set alternate function for USART3 (AF1) on pins 10
-		
-		//Set PB13 to Alternate Function Mode
-		GPIOB->MODER |= (1 << 27);
-		GPIOB->MODER &= ~(1 << 26);
-		
-		GPIOB->OTYPER |= (1 << 13);
+  GPIOB -> OTYPER &= ~(1 << 14); // PB14 push pull
 
-		GPIOB->AFR[1] |= (1 << 22); // Set alternate function for USART3 (AF5) on pins 10
-		GPIOB->AFR[1] |= (1 << 20); // Set alternate function for USART3 (AF5) on pins 10
+  GPIOB -> ODR |= (1 << 14); // Set pin 14 to high
 
-		// Set PB14 to output mode
-		GPIOB->MODER |= (1 << 28);
-		GPIOB->MODER &= ~(1 << 29);
-		
-		GPIOB->OTYPER &= ~(1 << 14);
-		
-		GPIOB->ODR |= (1 << 14);
+  GPIOC -> MODER |= (1 << 0); // PC0 output mode
+  GPIOC -> MODER &= ~(1 << 1); // PC0 ouput mode
+ 
+  GPIOB -> OTYPER &= ~(1 << 0); // PC0 push pull
 
-		// Set PC0 to output mode
-		GPIOC->MODER |= (1 << 0);
-		GPIOC->MODER &= ~(1 << 1);
-		
-		GPIOB->OTYPER &= ~(1 << 0);
-		
-		GPIOC->ODR |= (1 << 0);
-		
-  /* USER CODE BEGIN SysInit */
+  GPIOB -> ODR |= (1 << 0); // Set pin 0 to high
 
-  /* USER CODE END SysInit */
+  // Setting I2C2 to 1kHz
+  I2C2 -> TIMINGR |= 0x13;
+  I2C2 -> TIMINGR |= (0xF << 8);
+  I2C2 -> TIMINGR |= (0x2 << 16);
+  I2C2 -> TIMINGR |= (0x4 << 20);
+  I2C2 -> TIMINGR |= (1 << 28);
 
-  /* Initialize all configured peripherals */
-  /* USER CODE BEGIN 2 */
+  I2C2 -> CR1 |= (1 << 0);
 
-  /* USER CODE END 2 */
+  
+  // Setting slave address
+  I2C2 -> CR2 |= (0x69 << 1);
+  I2C2 -> CR2 |= (1 << 16);
+  I2C2 -> CR2 &= ~(1 << 10);
+  I2C2 -> CR2 |= (1 << 13);
 
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
+  // Wait for TXIS and NAXKF
+  while(1) {
+    if((I2C2->ISR & (1<<1)) == (1<<1)) {
+      break;
+    }
+    if ((I2C2->ISR & (1<<4)) == (1<<4)) {
+      continue;
+    }
   }
-  /* USER CODE END 3 */
+  
+  I2C2 -> TXDR |= 0x0F; // WHO_AM_I
+
+  // Wait for transfer complete
+  while(1) {
+    if((I2C2->ISR & (1<<6)) == (1<<6)) {
+      break;
+    }
+  }
+
+  // Setting slave address
+  I2C2 -> CR2 |= (0x69 << 1);
+  I2C2 -> CR2 |= (1 << 16);
+  I2C2 -> CR2 |= I2C_CR2_RD_WRN;
+  I2C2 -> CR2 |= I2C_CR2_START;
+
+  // Wait for RXNE
+  while(1) {
+    if(I2C2->ISR & I2C_ISR_RXNE) {
+      break;
+    }
+    if((I2C2->ISR & (1<<4)) == (1<<4)) {
+      continue;
+    }
+  }
+
+  // Wait for transfer complete
+  while(1) {
+    if((I2C2->ISR & (1<<6)) == (1<<6)) {
+      break;
+    }
+  }
+
+  // if(I2C2 -> RXDR == 0xD3) {
+  //   I2C2 -> CR2 |= (1 << 14);
+  // }
+
+  I2C2 -> CR2 |= (1 << 14);
+
+  while(1) {}
+  
 }
+
 
 /**
   * @brief System Clock Configuration
