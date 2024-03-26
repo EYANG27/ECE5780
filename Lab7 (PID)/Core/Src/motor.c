@@ -157,9 +157,10 @@ void PI_update(void) {
      * adc_value -> raw ADC counts to report current
      *
      */
-    
-    /// TODO: calculate error signal and write to "error" variable
-    
+	  /// TODO: calculate error signal and write to "error" variable
+    error = target_rpm*2 - motor_speed;
+	  //error = target_rpm - converted_motor_speed;
+		
     /* Hint: Remember that your calculated motor speed may not be directly in RPM!
      *       You will need to convert the target or encoder speeds to the same units.
      *       I recommend converting to whatever units result in larger values, gives
@@ -167,19 +168,28 @@ void PI_update(void) {
      */
     
     
-    /// TODO: Calculate integral portion of PI controller, write to "error_integral" variable
-    
-    /// TODO: Clamp the value of the integral to a limited positive range
-    
+    // Calculate integral portion of PI controller, write to "error_integral" variable
+    error_integral = (error_integral + (error*duty_cycle));
+		
+    // Clamp the value of the integral to a limited positive range
+		if(error_integral < 0) 
+		{
+			error_integral = 0;
+		}
+		else if (error_integral > 3200) 
+		{
+			error_integral = 3200;
+		}
+
+     
     /* Hint: The value clamp is needed to prevent excessive "windup" in the integral.
      *       You'll read more about this for the post-lab. The exact value is arbitrary
      *       but affects the PI tuning.
      *       Recommend that you clamp between 0 and 3200 (what is used in the lab solution)
      */
     
-    /// TODO: Calculate proportional portion, add integral and write to "output" variable
-    
-    int16_t output = 0; // Change this!
+    // Calculate proportional portion, add integral and write to "output" variable 
+    int16_t output = (Kp*error) + Ki * error_integral; 
     
     /* Because the calculated values for the PI controller are significantly larger than 
      * the allowable range for duty cycle, you'll need to divide the result down into 
@@ -197,10 +207,19 @@ void PI_update(void) {
      * required for tuning.
      */
 
-     /// TODO: Divide the output into the proper range for output adjustment
-     
-     /// TODO: Clamp the output value between 0 and 100 
-    
+     //Divide the output into the proper range for output adjustment
+     output = output >>5;
+		 
+     //Clamp the output value between 0 and 100 
+    if(output <0) 
+		{
+			output = 0;
+		}
+		else if (output > 100) 
+		{
+			output = 100;
+		}
+		
     pwm_setDutyCycle(output);
     duty_cycle = output;            // For debug viewing
 
